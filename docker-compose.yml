@@ -1,5 +1,5 @@
 services:
-  oracle-instance-creator:
+  oracle-hunter:
     build: .
     env_file: .env
     volumes:
