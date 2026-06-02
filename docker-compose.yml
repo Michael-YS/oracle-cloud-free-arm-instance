@@ -4,4 +4,5 @@ services:
     env_file: .env
     volumes:
       - ./ssh_key:/app/ssh_key:ro
+      - ~/.oci:/oracle/.oci
     restart: unless-stopped
