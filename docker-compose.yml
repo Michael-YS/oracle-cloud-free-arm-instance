@@ -1,0 +1,7 @@
+services:
+  oracle-instance-creator:
+    build: .
+    env_file: .env
+    volumes:
+      - ./ssh_key:/app/ssh_key:ro
+    restart: unless-stopped

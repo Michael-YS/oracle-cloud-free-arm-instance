@@ -35,30 +35,50 @@ oci compute image list --all -c "$TENANCY_ID" --auth api_key | jq -r '.data[] | 
 ```
 oci network subnet list -c "$TENANCY_ID" --auth api_key | jq -r '.data[] | "\(.["display-name"]): \(.id)"'
 ```
-9. Copy the availability domain into the [.env](.env) variable `AVAILABILITY_DOMAIN`:
+9. Copy the availability domain(s) into the [.env](.env) variable `AVAILABILITY_DOMAIN`. For a single domain:
 ```
 oci iam availability-domain list -c "$TENANCY_ID" --auth api_key | jq -r '.data[].name'
 ```
-10. Lastly change the variable `PATH_TO_PUBLIC_SSH_KEY` in the [.env](.env) file. That;s the path to a public SSH key on your machine to connect to the ARM instance once it's created
-   - Either download it from the Oracle Cloud instance creation website or [generate an ssh key yourself](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent#generating-a-new-ssh-key)  
+   If you have multiple availability domains (space-delimited list), list all of them:
+```
+oci iam availability-domain list -c "$TENANCY_ID" --auth api_key | jq -r '.data[].name' | paste -sd ' '
+```
+10. Lastly change the variable `PATH_TO_PUBLIC_SSH_KEY` in the [.env](.env) file. That's the path to a public SSH key on your machine to connect to the ARM instance once it's created
+    - Either download it from the Oracle Cloud instance creation website or [generate an ssh key yourself](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent#generating-a-new-ssh-key)
+    - For Docker setup, place your public key at `ssh_key/public_key.pub`  
 Finally, we are done with the setup (hardest part)
 
 ## Customize (optional)
-Inside the file `/oracle_cloud_instance_creator.sh` you will find a section to change following parameters:
+Inside the file [script/oracle_cloud_instance_creator.sh](script/oracle_cloud_instance_creator.sh) you will find a section to change following parameters:
 
 CPU cores, memory in gb, boot volume disk space, path to public SSH key, interval of the creation request
 
-## Run script 
-- Open the terminal and go to the path of this repo
-- make sure the creator script can be executed 
+## Run script
+
+### Option 1: Docker (Recommended)
+- Make sure you have Docker installed
+- Copy your public SSH key to `ssh_key/public_key.pub`
+- Update the `.env` file with your Oracle Cloud credentials
+- Run with docker-compose:
 ```
-chmod +x oracle_cloud_instance_creator.sh
+docker-compose up -d
+```
+The container will run in the background and automatically restart unless stopped.
+
+### Option 2: Direct script execution
+- Open the terminal and go to the path of this repo
+- Make sure the creator script can be executed
+```
+chmod +x script/oracle_cloud_instance_creator.sh
 ```
 - Run the script with:
 ```
-./oracle_cloud_instance_creator.sh
+./script/oracle_cloud_instance_creator.sh
 ```
+
 Every minute (default `requestInterval`) the script will request an instance. The console will print a JSON `ServerError` response until the instance creation was successful. The creation could take days or in some cases weeks/months. You could run it on your machine, but I'd recommend to create a simple free AMD instance first and run it there in the background.
+
+Note: If you have multiple availability domains (e.g., `JtDP:*** JtDP:*** JtDP:***`), the script will automatically try each one in the order listed in `AVAILABILITY_DOMAIN` in your `.env` file.
 
 Screenshot of how the error 500 response would look like. If you see something like this everything works as expected: 
 ![screenshot](screenshot.png)

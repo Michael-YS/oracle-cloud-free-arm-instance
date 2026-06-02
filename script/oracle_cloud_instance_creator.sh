@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source .env
+# source .env
 
 if [[ -z "${TENANCY_ID}" ]]; then
     echo "TENANCY_ID is unset or empty. Please change in .env file"
@@ -32,19 +32,20 @@ profile="DEFAULT"
 # ----------------------ENDLESS LOOP TO REQUEST AN ARM INSTANCE---------------------------------------------------------
 
 while true; do
-
-    oci compute instance launch --no-retry  \
-    --auth api_key \
-    --profile "$profile" \
-    --display-name big-arm \
-    --compartment-id "$TENANCY_ID" \
-    --image-id "$IMAGE_ID" \
-    --subnet-id "$SUBNET_ID" \
-    --availability-domain "$AVAILABILITY_DOMAIN" \
-    --shape 'VM.Standard.A1.Flex' \
-    --shape-config "{'ocpus':$cpus,'memoryInGBs':$ram}" \
-    --boot-volume-size-in-gbs "$bootVolume" \
-    --ssh-authorized-keys-file "$PATH_TO_PUBLIC_SSH_KEY"
-
-    sleep $requestInterval
+    for domain in $AVAILABILITY_DOMAIN; do
+        oci compute instance launch --no-retry  \
+        --auth api_key \
+        --profile "$profile" \
+        --display-name big-arm \
+        --compartment-id "$TENANCY_ID" \
+        --image-id "$IMAGE_ID" \
+        --subnet-id "$SUBNET_ID" \
+        --availability-domain "$domain" \
+        --shape 'VM.Standard.A1.Flex' \
+        --shape-config "{'ocpus':$cpus,'memoryInGBs':$ram}" \
+        --boot-volume-size-in-gbs "$bootVolume" \
+        --ssh-authorized-keys-file "$PATH_TO_PUBLIC_SSH_KEY"
+        
+        sleep $requestInterval
+    done
 done
